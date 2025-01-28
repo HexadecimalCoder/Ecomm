@@ -1,0 +1,50 @@
+{% extends 'headers.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <div class="p-4 m-4">
+        <div class="col-lg-5 rounded mx-auto border pt-4 signupForm pb-4">
+            <div class="text-center">
+                <div class="display-8" style="font-family: arial">
+                    <b>Verify OTP</b>
+                    <p class="text-muted">Enter the OTP sent to your email to verify your account.</p>
+                </div>
+                <hr>
+            </div>
+
+            <form action="/verify-otp" method="POST">
+                {% csrf_token %}
+
+                <!-- Display Error Message -->
+                {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                {% endif %}
+
+                <!-- Display Success Message if OTP is sent -->
+                {% if success %}
+                    <div class="alert alert-success" role="alert">
+                        {{ success }}
+                    </div>
+                {% endif %}
+
+                               <div class="form-group">
+                    <label for="otp">OTP :</label>
+                    <input type="text" class="form-control" id="otp" name="otp" 
+                           placeholder="Enter OTP :" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Verify OTP</button>
+
+
+                <div class="text-center mt-3">
+                    <p class="text-muted">Didn't receive an OTP? <a href="/forget-password">Resend OTP</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

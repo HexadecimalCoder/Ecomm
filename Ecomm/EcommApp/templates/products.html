@@ -1,0 +1,162 @@
+{% extends 'headers.html' %}
+{% load static %}
+<!-- {% block js %}
+{% endblock %} -->
+{% block content %}
+
+
+
+<div class="container-fluid mt-3">
+  <div class="row"> 
+
+    <div class="col-lg-3 mx-auto">
+      <div class="list-group">
+
+        <a href="{% url 'products' %}" class="list-group-item list-group-item-action">
+          All Products
+        </a>
+        {% for category in categories %}
+        <a href="{% url 'products' %}?category={{ category.id }}" class="list-group-item list-group-item-action">
+          {{ category.name }}
+        </a>
+        
+        {% empty %}
+        <p>No categories available.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div id='products' class="col-lg-9 mx-auto">
+      <div>
+        <h1 class="text-center text-muted pt-2 pb-2">All Products</h1>
+      </div>
+
+      <div class="row mx-auto cards">
+
+        {% if messages %}
+          {% for message in messages %}
+            <script>
+              console.log("Django message:", "{{ message|escapejs }}"); // Debug log for messages
+              Toastify({
+                text: "{{ message|escapejs }}",
+                duration: 5000,
+                close: true,
+                gravity: "top",
+                position: "right",
+
+                backgroundColor: "{% if message.tags == 'success' %}#4CAF50{% elif message.tags == 'error' %}#F44336{% else %}#FFC107{% endif %}",
+                stopOnFocus: true,
+              
+                style: {
+                  width: "350px", 
+                  marginTop: "45px"
+                }
+              }).showToast();
+           
+            </script>
+          {% endfor %}
+        {% endif %}
+        {% for product in products %}
+          <div class="card mx-auto mb-3 border border-secondary rounded" id="product-{{product.id}}" style="width: 20rem;">
+            <a href="{% url 'product_detail' product.id %}">
+              <img src="{{product.image1.url}}" alt="" class="card-img-top rounded">
+            </a>
+
+            <div class="card-body">
+              <p class="card-title product-title" id="product-title-{{product.id}}">{{product.name}}</p>
+
+              <div class="card-text">
+                <strike class="text-danger original-price"> {{product.price}} </strike>
+                <span class="text-primary discount-price"> {{product.discount}} </span>
+                <sup class="badge badge-warning discount-percentage" id="discount-percentage-{{product.id}}"> 
+                  <!-- Discount percentage will be calculated dynamically -->
+                </sup>
+              </div>
+
+              <p class="card-text product-description" id="product-description-{{product.id}}">{{product.description}}</p>
+
+              <div class="d-flex">
+                <form method="post" action="{% url 'add_to_cart' product.id %}">
+                  {% csrf_token %}
+                  <button class="btn btn-primary text-size" type="submit">Add To Cart</button>
+
+                </form>
+              
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+
+   
+
+    const addToCartButtons = document.querySelectorAll('.add-to-cart');
+
+   
+    const productCards = document.querySelectorAll('.card');
+
+    productCards.forEach(card => {
+        const productTitleElement = card.querySelector(".product-title");
+        if (productTitleElement) {
+            const titleText = productTitleElement.textContent.trim();
+            const words = titleText.split(' ');
+            if (words.length > 5) {
+                const truncatedTitle = words.slice(0, 5).join(' ') + '...';
+                productTitleElement.textContent = truncatedTitle;
+            }
+        }
+
+        const productDescriptionElement = card.querySelector(".product-description");
+        if (productDescriptionElement) {
+            const descriptionText = productDescriptionElement.textContent.trim();
+            const descriptionWords = descriptionText.split(' ');
+            if (descriptionText.length > 10) {
+                const truncatedDescription = descriptionWords.slice(0, 10).join(' ') + '...';
+                productDescriptionElement.textContent = truncatedDescription;
+            }
+        }
+
+        const originalPriceElement = card.querySelector('.original-price');
+        const discountPriceElement = card.querySelector('.discount-price');
+        const discountPercentageElement = card.querySelector('.discount-percentage');
+
+        function formatPrice(price) {
+            return price.toLocaleString('en-IN');
+        }
+
+        if (originalPriceElement) {
+            const originalPrice = parseFloat(originalPriceElement.textContent.trim());
+            if (!isNaN(originalPrice)) {
+                originalPriceElement.textContent = formatPrice(originalPrice);
+            }
+        }
+
+        if (discountPriceElement) {
+            const discountPrice = parseFloat(discountPriceElement.textContent.trim());
+            if (!isNaN(discountPrice)) {
+                discountPriceElement.textContent = formatPrice(discountPrice);
+            }
+        }
+
+        if (originalPriceElement && discountPriceElement) {
+            const originalPrice = parseFloat(originalPriceElement.textContent.replace(/,/g, ''));
+            const discountPrice = parseFloat(discountPriceElement.textContent.replace(/,/g, ''));
+
+            if (originalPrice > 0 && discountPrice > 0) {
+                const discountPercentage = (((originalPrice - discountPrice) / originalPrice) * 100).toFixed(1);
+                discountPercentageElement.textContent = `${discountPercentage}% Off`;
+            }
+        }
+    });
+});
+
+</script>
+
+{% endblock %}

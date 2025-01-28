@@ -1,0 +1,172 @@
+{% extends 'headers.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="text-center pt-3 pb-3">
+                <h1>Your Cart</h1>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Sno.</th>
+                            <th>Image</th>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if messages %}
+                        {% for message in messages %}
+                        <script>
+                            Toastify({
+                                text: "{{ message|escapejs }}",
+                                duration: 5000,
+                                close: true,
+                                gravity: "top",
+                                position: "right",
+                                backgroundColor: "{% if message.tags == 'success' %}#4CAF50{% elif message.tags == 'error' %}#F44336{% else %}#FFC107{% endif %}",
+                                stopOnFocus: true,
+                                style: { width: "350px", marginTop: "45px" }
+                            }).showToast();
+                        </script>
+                        {% endfor %}
+                        {% endif %}
+
+                        {% if cart_items %}
+                        {% for item in cart_items %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>
+                                <img src="{{ item.product.image1.url }}" alt="{{ item.product.name }}" width="50">
+                            </td>
+                            <td>{{ item.product.name }}</td>
+                            <td data-price="{{ item.product.discount }}" data-quantity="{{ item.quantity }}">
+                                ₹ {{ item.product.discount }}
+                            </td>
+                            <td style="display: flex; gap: 10px;">
+                                <a href="{% url 'cart_increment' item.product.id %}">
+                                    <button class="btn btn-primary text-size bg-dark"
+                                        style="width: 40px; border-radius: 100%; height: 40px;">+</button>
+                                </a>
+                                <p style="font-size: 25px;">{{ item.quantity }}</p>
+                                <a href="{% url 'cart_decrement' item.product.id %}">
+                                    <button class="btn btn-primary text-size bg-dark"
+                                        style="width: 40px; height: 40px; border-radius: 100%;">-</button>
+                                </a>
+                            </td>
+                            <td data-total="{{ item.product.discount }}">
+                                ₹ {{ item.product.discount }}
+                            </td>
+                            <td id="product-{{ item.product.id }}">
+                                {% comment %} {% url 'productdetails' item.product.id %} {% endcomment %}
+                                <a href="">
+                                    <button class="btn btn-primary text-size" style="width: 80px;">View</button>
+                                </a>
+                                <a href="{% url 'remove_from_cart' item.product.id %}">
+                                    <button class="btn btn-primary text-size bg-danger"
+                                        style="width: 80px;">Remove</button>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">
+                                <h2>Your Cart is Empty</h2>
+                                <a href="{% url 'products' %}">
+                                    <button class="btn btn-primary mt-3">Continue Shopping</button>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+
+            {% if cart_items %}
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <a href="{% url 'products' %}" class="btn btn-secondary">Continue Shopping</a>
+                <div class="card" style="width: 18rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">Cart Summary</h5>
+                        <p class="card-text">
+                            Total Items: <strong>{{ cart_items|length }}</strong><br>
+                            Total Price: <strong>₹ <span id="cart-total">{{ total_price }}</span></strong>
+                        </p>
+                        <a href="{% url 'checkout_page' %}" class="btn btn-primary btn-block">Proceed to Checkout</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+          
+
+          
+
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const priceCells = document.querySelectorAll('td[data-price]');
+        const totalCells = document.querySelectorAll('td[data-total]');
+
+        priceCells.forEach(function (cell) {
+            const price = parseFloat(cell.getAttribute('data-price'));
+            if (!isNaN(price)) {
+                const formattedPrice = price.toLocaleString('en-IN');
+
+                cell.textContent = '₹ ' + formattedPrice;
+            }
+        });
+
+        totalCells.forEach(function (cell) {
+            const total = parseFloat(cell.getAttribute('data-total')); // Get the total value (Quantity * Price)
+            if (!isNaN(total)) {
+                const formattedTotal = total.toLocaleString('en-IN'); // Format the total with commas
+                // Keep the currency symbol and only format the numeric part
+                cell.textContent = '₹ ' + formattedTotal;
+            }
+        });
+
+        function updateCartTotal(){
+            let total=0
+            document.querySelectorAll('td[data-total]').forEach(function(cell){
+                const itemTotal=parseFloat(cell.getAttribute('data-total'))
+                if(!isNaN(itemTotal)){
+                    total += itemTotal
+
+                }
+            })
+
+            const cartTotalElement=document.getElementById('cart-total')
+            if(cartTotalElement){
+                cartTotalElement.textContent=total.toLocaleString('en-IN')
+            }
+        }
+
+document.querySelectorAll('button').forEach(function(button){
+    button.addEventListener('click',function(){
+        setTimeout(updateCartTotal, 500); 
+    })
+})
+
+
+updateCartTotal();
+    });
+
+
+
+</script>
+{% endblock %}

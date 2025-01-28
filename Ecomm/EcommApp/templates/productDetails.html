@@ -1,0 +1,120 @@
+{% extends 'headers.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+
+    <div class="col-md-6 d-flex">
+
+      {% if messages %}
+      {% for message in messages %}
+        <script>
+          console.log("Django message:", "{{ message|escapejs }}"); // Debug log for messages
+          Toastify({
+            text: "{{ message|escapejs }}",
+            duration: 5000,
+            close: true,
+            gravity: "top",
+            position: "right",
+
+            backgroundColor: "{% if message.tags == 'success' %}#4CAF50{% elif message.tags == 'error' %}#F44336{% else %}#FFC107{% endif %}",
+            stopOnFocus: true,
+          
+            style: {
+              width: "350px", 
+              marginTop: "45px"
+            }
+          }).showToast();
+       
+        </script>
+      {% endfor %}
+    {% endif %}
+   
+      <div class="image-gallery d-flex flex-column align-items-center me-3">
+        <img src="{{ product.image1.url }}" alt="Image 1" class="img-thumbnail mb-2 gallery-image" style="width: 100px; height: 100px; cursor: pointer;">
+        {% if product.image2 %}
+          <img src="{{ product.image2.url }}" alt="Image 2" class="img-thumbnail mb-2 gallery-image" style="width: 100px; height: 100px; cursor: pointer;">
+        {% endif %}
+        {% if product.image3 %}
+          <img src="{{ product.image3.url }}" alt="Image 3" class="img-thumbnail mb-2 gallery-image" style="width: 100px; height: 100px; cursor: pointer;">
+        {% endif %}
+        {% if product.image4 %}
+          <img src="{{ product.image4.url }}" alt="Image 4" class="img-thumbnail mb-2 gallery-image" style="width: 100px; height: 100px; cursor: pointer;">
+        {% endif %}
+        {% if product.image5 %}
+          <img src="{{ product.image5.url }}" alt="Image 5" class="img-thumbnail mb-2 gallery-image" style="width: 100px; height: 100px; cursor: pointer;">
+        {% endif %}
+      </div>
+
+      <!-- Main Image -->
+      <div class="main-image">
+        <img id="mainImage" src="{{ product.image1.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="max-height: 400px;">
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <h1>{{ product.name }}</h1>
+      <p>{{ product.description }}</p>
+      <div class="mb-3">
+        <strike class="text-danger original-price">₹{{ product.price }}</strike>
+        <span class="text-success discount-price">₹{{ product.discount }}</span>
+        <sup class="badge badge-warning discount-percentage" id="discount-percentage-{{ product.id }}"></sup>
+      </div>
+
+      <div class="d-flex">
+
+        <form method="post" action="{% url 'add_to_cart' product.id %}?from_product_detail=true">
+          {% csrf_token %}
+          <button class="btn btn-primary text-size" type="submit">Add To Cart</button>
+        </form>
+        
+        <button class="btn btn-secondary">Add to Wishlist</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const galleryImages = document.querySelectorAll('.gallery-image');
+    const mainImage = document.getElementById('mainImage');
+
+    galleryImages.forEach(image => {
+      image.addEventListener('click', function () {
+        mainImage.src = this.src;
+      });
+    });
+
+   
+    function formatPrice(price) {
+      return price.toLocaleString('en-IN');
+    }
+
+    const originalPriceElement = document.querySelector('.original-price');
+    const discountPriceElement = document.querySelector('.discount-price');
+    const discountPercentageElement = document.querySelector('.discount-percentage');
+
+    if (originalPriceElement && discountPriceElement) {
+      let originalPrice = parseFloat(originalPriceElement.textContent.replace(/₹|,/g, '').trim());
+      let discountPrice = parseFloat(discountPriceElement.textContent.replace(/₹|,/g, '').trim());
+
+      if (!isNaN(originalPrice)) {
+        originalPriceElement.textContent = `₹${formatPrice(originalPrice)}`;
+      }
+
+      if (!isNaN(discountPrice)) {
+        discountPriceElement.textContent = `₹${formatPrice(discountPrice)}`;
+      }
+
+      if (originalPrice > 0 && discountPrice > 0) {
+        const discountPercentage = (((originalPrice - discountPrice) / originalPrice) * 100).toFixed(1);
+        discountPercentageElement.textContent = `${discountPercentage}% Off`;
+      }
+    }
+  });
+
+
+</script>
+{% endblock %}
